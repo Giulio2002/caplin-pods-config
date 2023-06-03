@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: caplin-sepolia
+  namespace: caplin
+  name: caplin-sepolia
+spec:
+  replicas: 1
+  serviceName: caplin-sepolia
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: caplin-sepolia
+  template:
+    metadata:
+      labels:
+        app: caplin-sepolia
+    spec:
+      containers:
+      - name: caplin-sepolia
+        image: thorax/erigon:devel
+        command: ["caplin-phase1"]
+        args:
+           - "--beacon-db-mode=light"
+           - "--pprof"
+           - "--metrics"
+           - "--pprof.addr=0.0.0.0"
+           - "--metrics.addr=0.0.0.0"
+           - "--pprof.port=6060"
+           - "--metrics.port=6060"
+           - "--chain=sepolia"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6060
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 64m
+          limits:
+            memory: 512Mi
+            cpu: 256m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: caplin-sepolia
+  namespace: caplin
+  labels:
+    scrape-app: caplin
+spec:
+  selector:
+    app: caplin-sepolia
+  ports:
+    - protocol: TCP
+      port: 6060
+      name: metrics

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: caplin-mainnet
+  namespace: caplin
+  name: caplin-mainnet
+spec:
+  replicas: 1
+  serviceName: caplin-mainnet
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: caplin-mainnet
+  template:
+    metadata:
+      labels:
+        app: caplin-mainnet
+    spec:
+      containers:
+      - name: caplin-mainnet
+        image: thorax/erigon:devel
+        command: ["caplin-phase1"]
+        args:
+           - "--beacon-db-mode=light"
+           - "--pprof"
+           - "--metrics"
+           - "--pprof.addr=0.0.0.0"
+           - "--metrics.addr=0.0.0.0"
+           - "--pprof.port=6060"
+           - "--metrics.port=6060"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6060
+        resources:
+          requests:
+            memory: 2048Mi
+            cpu: 256m
+          limits:
+            memory: 4096Mi
+            cpu: 512m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: caplin-mainnet
+  namespace: caplin
+  labels:
+    scrape-app: caplin
+spec:
+  selector:
+    app: caplin-mainnet
+  ports:
+    - protocol: TCP
+      port: 6060
+      name: metrics

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: caplin-goerli
+  namespace: caplin
+  name: caplin-goerli
+spec:
+  replicas: 1
+  serviceName: caplin-goerli
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: caplin-goerli
+  template:
+    metadata:
+      labels:
+        app: caplin-goerli
+    spec:
+      containers:
+      - name: caplin-goerli
+        image: thorax/erigon:devel
+        command: ["caplin-phase1"]
+        args:
+           - "--beacon-db-mode=light"
+           - "--pprof"
+           - "--metrics"
+           - "--pprof.addr=0.0.0.0"
+           - "--metrics.addr=0.0.0.0"
+           - "--pprof.port=6060"
+           - "--metrics.port=6060"
+           - "--chain=goerli"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6060
+        resources:
+          requests:
+            memory: 1524Mi
+            cpu: 128m
+          limits:
+            memory: 3048Mi
+            cpu: 512m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: caplin-goerli
+  namespace: caplin
+  labels:
+    scrape-app: caplin
+spec:
+  selector:
+    app: caplin-goerli
+  ports:
+    - protocol: TCP
+      port: 6060
+      name: metrics
